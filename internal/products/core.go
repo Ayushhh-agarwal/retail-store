@@ -4,12 +4,12 @@ import (
 	"github.com/razorpay/retail-store/internal/errors"
 )
 
-func CreateProduct(product *Product) (*Product, *errors.ErrorData) {
-	err := CreateProductInDB(product)
+func CreateProduct(product *Product) (*CreateProductResp, *errors.ErrorData) {
+	resp, err := CreateProductInDB(product)
 	if err != nil {
 		return nil, err
 	}
-	return product, nil
+	return resp, nil
 }
 
 func GetProducts() ([]Product, *errors.ErrorData) {

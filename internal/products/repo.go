@@ -6,16 +6,24 @@ import (
 	"github.com/razorpay/retail-store/internal/uniqueId"
 )
 
-func CreateProductInDB(product *Product) (error *errors.ErrorData) {
+func CreateProductInDB(product *Product) (*CreateProductResp, *errors.ErrorData) {
 	id, _ := uniqueId.New()
 	product.SetID(id)
 	if err := database.DB.Create(product).Error; err != nil {
-		return &errors.ErrorData{
+		return nil, &errors.ErrorData{
 			Code:    500,
 			Message: err.Error(),
 		}
 	}
-	return nil
+
+	var resp = CreateProductResp{
+		Id:       product.Id,
+		Name:     product.Name,
+		Price:    product.Price,
+		Quantity: product.Quantity,
+		Message:  "product successfully added",
+	}
+	return &resp, nil
 }
 
 func GetProductsFromDB() ([]Product, *errors.ErrorData) {

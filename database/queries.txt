@@ -8,3 +8,12 @@ Customers Table creation -
         phone varchar(255),
         address varchar(255)
     );
+
+Products Table creation -
+
+    CREATE TABLE products (
+        id char(14) NOT NULL PRIMARY KEY,
+        name varchar(255),
+        price int,
+        quantity int
+    );

@@ -12,14 +12,14 @@ import (
 func Create(c *gin.Context) {
 	var product *Product
 	_ = c.BindJSON(&product)
-	product, err := CreateProduct(product)
+	resp, err := CreateProduct(product)
 	if err != nil {
 		code := err.GetHttpCode()
 		c.JSON(code, err.Public())
 		return
 	}
 
-	c.JSON(http.StatusOK, product)
+	c.JSON(http.StatusOK, resp)
 }
 
 func GetMany(c *gin.Context) {
