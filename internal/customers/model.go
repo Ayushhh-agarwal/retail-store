@@ -1,7 +1,7 @@
 package customers
 
 type Customer struct {
-	Id      int    `json:"id"`
+	Id      string `json:"id"`
 	Name    string `json:"name"`
 	Phone   string `json:"phone"`
 	Address string `json:"address"`
@@ -10,4 +10,8 @@ type Customer struct {
 
 func (c *Customer) TableName() string {
 	return "customers"
+}
+
+func (c *Customer) SetID(id string) {
+	c.Id = id
 }

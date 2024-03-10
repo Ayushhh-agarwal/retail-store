@@ -1,9 +1,12 @@
 package customers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/razorpay/retail-store/internal/common"
 )
 
 func Create(c *gin.Context) {
@@ -13,7 +16,7 @@ func Create(c *gin.Context) {
 	if err != nil {
 		code := err.GetHttpCode()
 		c.JSON(code, err.Public())
-		c.Abort()
+		return
 	}
 
 	c.JSON(http.StatusOK, customer)
@@ -24,7 +27,7 @@ func GetMany(c *gin.Context) {
 	if err != nil {
 		code := err.GetHttpCode()
 		c.JSON(code, err.Public())
-		c.Abort()
+		return
 	}
 
 	c.JSON(http.StatusOK, GetManyResp{Items: customers})
@@ -36,9 +39,10 @@ func GetByID(c *gin.Context) {
 	if err != nil {
 		code := err.GetHttpCode()
 		c.JSON(code, err.Public())
-		c.Abort()
+		return
 	}
 
+	customer.Id = fmt.Sprintf("%s%s", common.CustomerIdPrefix, customer.Id)
 	c.JSON(http.StatusOK, customer)
 }
 

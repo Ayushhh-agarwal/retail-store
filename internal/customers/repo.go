@@ -3,9 +3,12 @@ package customers
 import (
 	"github.com/razorpay/retail-store/database"
 	"github.com/razorpay/retail-store/internal/errors"
+	"github.com/razorpay/retail-store/internal/uniqueId"
 )
 
 func CreateCustomerInDB(customer *Customer) (error *errors.ErrorData) {
+	id, _ := uniqueId.New()
+	customer.SetID(id)
 	if err := database.DB.Create(customer).Error; err != nil {
 		return &errors.ErrorData{
 			Code:    500,
