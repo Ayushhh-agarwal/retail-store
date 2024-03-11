@@ -17,3 +17,26 @@ Products Table creation -
         price int,
         quantity int
     );
+
+Orders Table creation -
+
+    CREATE TABLE orders (
+        id char(14) NOT NULL,
+        product_id char(14) NOT NULL,
+        customer_id char(14) NOT NULL,
+        quantity int,
+        status varchar(255),
+        value int,
+        PRIMARY KEY (id, customer_id, product_id)
+    );
+
+
+Transactions Table creation -
+
+    CREATE TABLE transactions (
+        id char(14) NOT NULL PRIMARY KEY,
+        order_id char(14),
+        value int,
+        status varchar(255),
+        mode_of_payment varchar(255)
+    );

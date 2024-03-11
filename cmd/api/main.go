@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/razorpay/retail-store/database"
+	"github.com/razorpay/retail-store/internal/mutex"
 	"github.com/razorpay/retail-store/routes"
 )
 
@@ -12,6 +13,8 @@ const (
 func main() {
 	database.Init()
 
+	mutex.InitializeRedis(mutex.GetRedisConfig())
+	mutex.Mutex = mutex.InitializeMutex(mutex.GetRedisClient())
 	r := routes.SetupRouter()
 
 	err := r.Run(ServerPort)

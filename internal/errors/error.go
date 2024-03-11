@@ -18,3 +18,7 @@ func (err ErrorData) Public() Public {
 		ErrorMessage: err.Message,
 	}
 }
+
+const (
+	RedisLockError = "Error occurred with code : 210 and message : redislock: not obtained"
+)
