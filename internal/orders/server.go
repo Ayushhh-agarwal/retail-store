@@ -12,7 +12,7 @@ import (
 func Create(c *gin.Context) {
 	var orderReq *OrderRequest
 	_ = c.BindJSON(&orderReq)
-	orderResp, err := CreateOrder(orderReq)
+	orderResp, err := Core().CreateOrder(orderReq)
 	if err != nil {
 		code := err.GetHttpCode()
 		c.JSON(code, err.Public())
@@ -25,7 +25,7 @@ func Create(c *gin.Context) {
 
 func GetByID(c *gin.Context) {
 	id := c.Params.ByName("id")
-	orderResp, err := GetOrderById(id)
+	orderResp, err := Core().GetOrderById(id)
 	if err != nil {
 		code := err.GetHttpCode()
 		c.JSON(code, err.Public())

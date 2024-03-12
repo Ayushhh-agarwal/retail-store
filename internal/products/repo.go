@@ -6,7 +6,32 @@ import (
 	"github.com/razorpay/retail-store/internal/uniqueId"
 )
 
-func CreateProductInDB(product *Product) (*CreateProductResp, *errors.ErrorData) {
+type IRepo interface {
+	CreateProductInDB(product *Product) (*CreateProductResp, *errors.ErrorData)
+	GetProductsFromDB() ([]Product, *errors.ErrorData)
+	GetProductByIdFromDB(id string) (*Product, *errors.ErrorData)
+	UpdateProductInDB(id string, input UpdateProductInput) (*Product, *errors.ErrorData)
+}
+
+var repo IRepo
+
+func NewRepo() IRepo {
+	repo = &RepoImpl{}
+	return repo
+}
+
+func Repo() IRepo {
+	return repo
+}
+
+// SetRepo Used for setting up Mock IRepo
+func SetRepo(r IRepo) {
+	repo = r
+}
+
+type RepoImpl struct{}
+
+func (r RepoImpl) CreateProductInDB(product *Product) (*CreateProductResp, *errors.ErrorData) {
 	id, _ := uniqueId.New()
 	product.SetID(id)
 	if err := database.DB.Create(product).Error; err != nil {
@@ -26,7 +51,7 @@ func CreateProductInDB(product *Product) (*CreateProductResp, *errors.ErrorData)
 	return &resp, nil
 }
 
-func GetProductsFromDB() ([]Product, *errors.ErrorData) {
+func (r RepoImpl) GetProductsFromDB() ([]Product, *errors.ErrorData) {
 	var products []Product
 	if err := database.DB.Find(&products).Error; err != nil {
 		return nil, &errors.ErrorData{
@@ -37,7 +62,7 @@ func GetProductsFromDB() ([]Product, *errors.ErrorData) {
 	return products, nil
 }
 
-func GetProductByIdFromDB(id string) (*Product, *errors.ErrorData) {
+func (r RepoImpl) GetProductByIdFromDB(id string) (*Product, *errors.ErrorData) {
 	var product Product
 	if err := database.DB.Where("id = ?", id).First(&product).Error; err != nil {
 		return nil, &errors.ErrorData{
@@ -48,7 +73,7 @@ func GetProductByIdFromDB(id string) (*Product, *errors.ErrorData) {
 	return &product, nil
 }
 
-func UpdateProductInDB(id string, input UpdateProductInput) (*Product, *errors.ErrorData) {
+func (r RepoImpl) UpdateProductInDB(id string, input UpdateProductInput) (*Product, *errors.ErrorData) {
 	var product Product
 	if err := database.DB.Where("id = ?", id).First(&product).Error; err != nil {
 		return nil, &errors.ErrorData{

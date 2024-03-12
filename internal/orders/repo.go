@@ -7,7 +7,31 @@ import (
 	"github.com/razorpay/retail-store/internal/uniqueId"
 )
 
-func CreateOrderInDB(order *Order) (error *errors.ErrorData) {
+type IRepo interface {
+	CreateOrderInDB(order *Order) (error *errors.ErrorData)
+	GetOrderByIdFromDB(id string) (*Order, *errors.ErrorData)
+	UpdateOrderStatusByIdInDB(id, status string) (*Order, *errors.ErrorData)
+}
+
+var repo IRepo
+
+func NewRepo() IRepo {
+	repo = &RepoImpl{}
+	return repo
+}
+
+func Repo() IRepo {
+	return repo
+}
+
+// SetRepo Used for setting up Mock IRepo
+func SetRepo(r IRepo) {
+	repo = r
+}
+
+type RepoImpl struct{}
+
+func (r RepoImpl) CreateOrderInDB(order *Order) (error *errors.ErrorData) {
 	id, _ := uniqueId.New()
 	order.SetID(id)
 	order.Status = orderStatusTypes.OrderPlaced
@@ -20,7 +44,7 @@ func CreateOrderInDB(order *Order) (error *errors.ErrorData) {
 	return nil
 }
 
-func GetOrderByIdFromDB(id string) (*Order, *errors.ErrorData) {
+func (r RepoImpl) GetOrderByIdFromDB(id string) (*Order, *errors.ErrorData) {
 	var order Order
 	if err := database.DB.Where("id = ?", id).First(&order).Error; err != nil {
 		return nil, &errors.ErrorData{
@@ -31,7 +55,7 @@ func GetOrderByIdFromDB(id string) (*Order, *errors.ErrorData) {
 	return &order, nil
 }
 
-func UpdateOrderStatusByIdInDB(id, status string) (*Order, *errors.ErrorData) {
+func (r RepoImpl) UpdateOrderStatusByIdInDB(id, status string) (*Order, *errors.ErrorData) {
 	var order Order
 	input := UpdateStatusRequest{
 		Status: status,

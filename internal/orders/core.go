@@ -7,14 +7,39 @@ import (
 	"github.com/razorpay/retail-store/internal/customers"
 	"github.com/razorpay/retail-store/internal/errors"
 	"github.com/razorpay/retail-store/internal/mutex"
+	"github.com/razorpay/retail-store/internal/orders/orderStatusTypes"
 	"github.com/razorpay/retail-store/internal/products"
 	"github.com/razorpay/retail-store/internal/uniqueId"
 )
 
-func CreateOrder(orderReq *OrderRequest) (*OrderResp, *errors.ErrorData) {
+type ICore interface {
+	CreateOrder(orderReq *OrderRequest) (*OrderResp, *errors.ErrorData)
+	GetOrderById(id string) (*OrderResp, *errors.ErrorData)
+	UpdateOrderStatus(id, status string) (*OrderResp, *errors.ErrorData)
+}
+
+var core ICore
+
+type CoreImpl struct{}
+
+func NewCore() ICore {
+	core = &CoreImpl{}
+	return core
+}
+
+func SetCore(c ICore) {
+	core = c
+}
+
+func Core() ICore {
+	return core
+}
+
+func (c CoreImpl) CreateOrder(orderReq *OrderRequest) (*OrderResp, *errors.ErrorData) {
 	valid, err := validateCreateOrderRequest(orderReq)
 	order := Order{}
 	id, _ := uniqueId.New()
+	order.CustomerId = orderReq.CustomerId[4:]
 	order.SetID(id)
 	var value = 0
 	if !valid {
@@ -43,9 +68,18 @@ func CreateOrder(orderReq *OrderRequest) (*OrderResp, *errors.ErrorData) {
 
 			productId := productOrderDetail.ProductId[5:]
 			value = value + int(product.Price*productOrderDetail.Quantity)
-			products.UpdateProduct(productId, products.UpdateProductInput{
+			products.Core().UpdateProduct(productId, products.UpdateProductInput{
 				Quantity: product.Quantity - productOrderDetail.Quantity,
 			})
+
+			order.ProductId = productOrderDetail.ProductId[5:]
+			order.Quantity = productOrderDetail.Quantity
+			order.Status = orderStatusTypes.OrderPlaced
+
+			err = Repo().CreateOrderInDB(&order)
+			if err != nil {
+				return nil, err
+			}
 		}
 		return nil, nil
 	})
@@ -56,10 +90,6 @@ func CreateOrder(orderReq *OrderRequest) (*OrderResp, *errors.ErrorData) {
 		}
 	}
 
-	err = CreateOrderInDB(&order)
-	if err != nil {
-		return nil, err
-	}
 	orderResp := OrderResp{
 		Id:     order.Id,
 		Status: order.Status,
@@ -68,8 +98,8 @@ func CreateOrder(orderReq *OrderRequest) (*OrderResp, *errors.ErrorData) {
 	return &orderResp, nil
 }
 
-func GetOrderById(id string) (*OrderResp, *errors.ErrorData) {
-	order, err := GetOrderByIdFromDB(id)
+func (c CoreImpl) GetOrderById(id string) (*OrderResp, *errors.ErrorData) {
+	order, err := Repo().GetOrderByIdFromDB(id)
 	if err != nil {
 		return nil, err
 	}
@@ -81,8 +111,8 @@ func GetOrderById(id string) (*OrderResp, *errors.ErrorData) {
 	return &orderResp, nil
 }
 
-func UpdateOrderStatus(id, status string) (*OrderResp, *errors.ErrorData) {
-	order, err := UpdateOrderStatusByIdInDB(id, status)
+func (c CoreImpl) UpdateOrderStatus(id, status string) (*OrderResp, *errors.ErrorData) {
+	order, err := Repo().UpdateOrderStatusByIdInDB(id, status)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +139,7 @@ func validateCreateOrderRequest(request *OrderRequest) (bool, *errors.ErrorData)
 
 func validateCustomerId(customerId string) bool {
 	customerId = customerId[4:]
-	_, err := customers.GetCustomerById(customerId)
+	_, err := customers.Core().GetCustomerById(customerId)
 	if err != nil {
 		return false
 	}
@@ -118,7 +148,7 @@ func validateCustomerId(customerId string) bool {
 
 func validateProductDetails(productOrderDetail ProductOrdered) (*products.Product, *errors.ErrorData) {
 	productId := productOrderDetail.ProductId[5:]
-	product, err := products.GetProductById(productId)
+	product, err := products.Core().GetProductById(productId)
 	if err != nil {
 		return nil, err
 	}

@@ -7,7 +7,31 @@ import (
 	"github.com/razorpay/retail-store/internal/uniqueId"
 )
 
-func CreateTransactionInDB(txnReq *TransactionRequest) (*Transaction, *errors.ErrorData) {
+type IRepo interface {
+	CreateTransactionInDB(txnReq *TransactionRequest) (*Transaction, *errors.ErrorData)
+	GetTransactionStatusByIdFromDB(id string) (string, *errors.ErrorData)
+	UpdateTransactionStatusByIdInDB(id, status string) (*Transaction, *errors.ErrorData)
+}
+
+var repo IRepo
+
+func NewRepo() IRepo {
+	repo = &RepoImpl{}
+	return repo
+}
+
+func Repo() IRepo {
+	return repo
+}
+
+// SetRepo Used for setting up Mock IRepo
+func SetRepo(r IRepo) {
+	repo = r
+}
+
+type RepoImpl struct{}
+
+func (r RepoImpl) CreateTransactionInDB(txnReq *TransactionRequest) (*Transaction, *errors.ErrorData) {
 	id, _ := uniqueId.New()
 	txnReq.OrderId = txnReq.OrderId[4:]
 	txn := Transaction{
@@ -27,7 +51,7 @@ func CreateTransactionInDB(txnReq *TransactionRequest) (*Transaction, *errors.Er
 	return &txn, nil
 }
 
-func GetTransactionStatusByIdFromDB(id string) (string, *errors.ErrorData) {
+func (r RepoImpl) GetTransactionStatusByIdFromDB(id string) (string, *errors.ErrorData) {
 	var txn Transaction
 	if err := database.DB.Where("id = ?", id).First(&txn).Error; err != nil {
 		return "", &errors.ErrorData{
@@ -38,7 +62,7 @@ func GetTransactionStatusByIdFromDB(id string) (string, *errors.ErrorData) {
 	return txn.Status, nil
 }
 
-func UpdateTransactionStatusByIdInDB(id, status string) (*Transaction, *errors.ErrorData) {
+func (r RepoImpl) UpdateTransactionStatusByIdInDB(id, status string) (*Transaction, *errors.ErrorData) {
 	var txn Transaction
 	input := UpdateTransactionRequest{
 		Status: status,

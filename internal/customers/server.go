@@ -12,7 +12,7 @@ import (
 func Create(c *gin.Context) {
 	var customer *Customer
 	_ = c.BindJSON(&customer)
-	customer, err := CreateCustomer(customer)
+	customer, err := Core().CreateCustomer(customer)
 	if err != nil {
 		code := err.GetHttpCode()
 		c.JSON(code, err.Public())
@@ -23,7 +23,7 @@ func Create(c *gin.Context) {
 }
 
 func GetMany(c *gin.Context) {
-	customers, err := GetCustomers()
+	customers, err := Core().GetCustomers()
 	if err != nil {
 		code := err.GetHttpCode()
 		c.JSON(code, err.Public())
@@ -35,7 +35,7 @@ func GetMany(c *gin.Context) {
 
 func GetByID(c *gin.Context) {
 	id := c.Params.ByName("id")
-	customer, err := GetCustomerById(id)
+	customer, err := Core().GetCustomerById(id)
 	if err != nil {
 		code := err.GetHttpCode()
 		c.JSON(code, err.Public())

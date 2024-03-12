@@ -12,7 +12,7 @@ import (
 func Create(c *gin.Context) {
 	var product *Product
 	_ = c.BindJSON(&product)
-	resp, err := CreateProduct(product)
+	resp, err := Core().CreateProduct(product)
 	if err != nil {
 		code := err.GetHttpCode()
 		c.JSON(code, err.Public())
@@ -23,7 +23,7 @@ func Create(c *gin.Context) {
 }
 
 func GetMany(c *gin.Context) {
-	products, err := GetProducts()
+	products, err := Core().GetProducts()
 	if err != nil {
 		code := err.GetHttpCode()
 		c.JSON(code, err.Public())
@@ -35,7 +35,7 @@ func GetMany(c *gin.Context) {
 
 func GetByID(c *gin.Context) {
 	id := c.Params.ByName("id")
-	product, err := GetProductById(id)
+	product, err := Core().GetProductById(id)
 	if err != nil {
 		code := err.GetHttpCode()
 		c.JSON(code, err.Public())
@@ -54,7 +54,7 @@ func Update(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	product, err := UpdateProduct(id, input)
+	product, err := Core().UpdateProduct(id, input)
 	if err != nil {
 		code := err.GetHttpCode()
 		c.JSON(code, err.Public())

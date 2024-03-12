@@ -12,7 +12,7 @@ import (
 func Create(c *gin.Context) {
 	var transactionReq *TransactionRequest
 	_ = c.BindJSON(&transactionReq)
-	transaction, err := CreateTransaction(transactionReq)
+	transaction, err := Core().CreateTransaction(transactionReq)
 	if err != nil {
 		code := err.GetHttpCode()
 		c.JSON(code, err.Public())
@@ -26,7 +26,7 @@ func Create(c *gin.Context) {
 
 func GetStatusByID(c *gin.Context) {
 	id := c.Params.ByName("id")
-	status, err := GetTransactionStatusById(id)
+	status, err := Core().GetTransactionStatusById(id)
 	if err != nil {
 		code := err.GetHttpCode()
 		c.JSON(code, err.Public())

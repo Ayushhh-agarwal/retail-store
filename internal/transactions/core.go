@@ -9,13 +9,35 @@ import (
 	"github.com/razorpay/retail-store/internal/transactions/transactionStatusTypes"
 )
 
-func CreateTransaction(transactionReq *TransactionRequest) (*Transaction, *errors.ErrorData) {
+type ICore interface {
+	CreateTransaction(transactionReq *TransactionRequest) (*Transaction, *errors.ErrorData)
+	GetTransactionStatusById(id string) (string, *errors.ErrorData)
+}
+
+var core ICore
+
+type CoreImpl struct{}
+
+func NewCore() ICore {
+	core = &CoreImpl{}
+	return core
+}
+
+func SetCore(c ICore) {
+	core = c
+}
+
+func Core() ICore {
+	return core
+}
+
+func (c CoreImpl) CreateTransaction(transactionReq *TransactionRequest) (*Transaction, *errors.ErrorData) {
 	valid, err := validateCreateTransactionRequest(transactionReq)
 	if !valid {
 		return nil, err
 	}
 
-	txn, err := CreateTransactionInDB(transactionReq)
+	txn, err := Repo().CreateTransactionInDB(transactionReq)
 	if err != nil {
 		return nil, err
 	}
@@ -33,19 +55,19 @@ func CreateTransaction(transactionReq *TransactionRequest) (*Transaction, *error
 		orderStatus = orderStatusTypes.Failed
 	}
 
-	txn, err = UpdateTransactionStatusByIdInDB(txn.Id, status)
+	txn, err = Repo().UpdateTransactionStatusByIdInDB(txn.Id, status)
 	if err != nil {
 		return nil, err
 	}
-	_, err = orders.UpdateOrderStatus(txn.OrderId, orderStatus)
+	_, err = orders.Core().UpdateOrderStatus(txn.OrderId, orderStatus)
 	if err != nil {
 		return nil, err
 	}
 	return txn, nil
 }
 
-func GetTransactionStatusById(id string) (string, *errors.ErrorData) {
-	status, err := GetTransactionStatusByIdFromDB(id)
+func (c CoreImpl) GetTransactionStatusById(id string) (string, *errors.ErrorData) {
+	status, err := Repo().GetTransactionStatusByIdFromDB(id)
 	if err != nil {
 		return "", err
 	}
@@ -67,7 +89,7 @@ func validateCreateTransactionRequest(request *TransactionRequest) (bool, *error
 
 func validateOrderId(orderId string) bool {
 	orderId = orderId[4:]
-	_, err := orders.GetOrderById(orderId)
+	_, err := orders.Core().GetOrderById(orderId)
 	if err != nil {
 		return false
 	}
