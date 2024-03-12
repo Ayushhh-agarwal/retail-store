@@ -107,6 +107,7 @@ func (c CoreImpl) GetOrderById(id string) (*OrderResp, *errors.ErrorData) {
 	orderResp := OrderResp{
 		Id:     order.Id,
 		Status: order.Status,
+		Value:  order.Value,
 	}
 	return &orderResp, nil
 }
