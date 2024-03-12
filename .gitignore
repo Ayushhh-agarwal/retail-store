@@ -19,3 +19,6 @@
 
 # Go workspace file
 go.work
+
+# Mock Files
+internal/**/*_mock.go
